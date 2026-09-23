@@ -1,0 +1,33 @@
+# Prettier reads this file too: since Prettier 3, --ignore-path defaults to
+# .gitignore as well as .prettierignore, so this is the single ignore list
+# for both git and `prettier --check .`. There is no separate .prettierignore.
+
+# Secrets — never commit these
+.env
+.env.*
+*.pem
+*.key
+*.p12
+secrets.json
+
+# Packaged builds
+*.zip
+*.crx
+*.xpi
+
+# Node (only if tooling is ever added; the extension itself has no deps).
+# Lockfiles are deliberately NOT ignored -- they belong in version control.
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini

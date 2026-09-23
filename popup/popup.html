@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Timestamp Notes</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="header-row">
+        <h1>Timestamp Notes</h1>
+        <div class="header-actions">
+          <button
+            id="reloadBtn"
+            class="icon-btn"
+            title="Reload current video"
+            aria-label="Reload current video"
+          >
+            ⟳
+          </button>
+          <button
+            id="gearBtn"
+            class="icon-btn"
+            title="Export settings"
+            aria-label="Export settings"
+          >
+            ⚙
+          </button>
+          <button
+            id="backBtn"
+            class="icon-btn hidden"
+            title="Back to notes"
+            aria-label="Back to notes"
+          >
+            ←
+          </button>
+        </div>
+      </div>
+      <p id="videoTitle" class="video-title">Open a YouTube video…</p>
+    </header>
+
+    <!-- ===================== NOTES VIEW ===================== -->
+    <main id="mainView">
+      <section>
+        <button id="captureBtn" class="btn btn-primary" disabled>
+          ● Capture current timestamp
+        </button>
+
+        <div id="draft" class="draft hidden">
+          <div class="draft-head">
+            <span id="draftTimestamp" class="badge">[00:00]</span>
+            <button
+              id="cancelDraftBtn"
+              class="icon-btn"
+              title="Discard"
+              aria-label="Discard this draft note"
+            >
+              ✕
+            </button>
+          </div>
+          <textarea
+            id="noteInput"
+            class="note-input"
+            rows="3"
+            placeholder="Write a note for this timestamp…"
+          ></textarea>
+          <button id="saveBtn" class="btn btn-save">Save note</button>
+        </div>
+      </section>
+
+      <section class="saved">
+        <div class="saved-head">
+          <h2>
+            Saved notes
+            <span id="count" class="count">0</span>
+          </h2>
+        </div>
+        <ul id="notesList" class="notes-list"></ul>
+        <p id="emptyState" class="empty">No notes saved for this video yet.</p>
+      </section>
+    </main>
+
+    <footer class="app-footer" id="mainFooter">
+      <button id="exportBtn" class="btn btn-secondary" disabled>
+        Export &amp; copy Markdown
+      </button>
+      <button id="clearBtn" class="btn btn-danger" disabled>Delete all</button>
+    </footer>
+
+    <!-- =================== SETTINGS VIEW =================== -->
+    <main id="settingsView" class="hidden">
+      <h2 class="settings-title">Export format</h2>
+
+      <label class="opt">
+        <input type="checkbox" id="setObsidian" />
+        <span>
+          <strong>Obsidian-flavored links</strong>
+          <small
+            >Escapes the brackets so <code>[[07:50]]</code> isn't read as a
+            wiki-link.</small
+          >
+        </span>
+      </label>
+
+      <label class="opt">
+        <input type="checkbox" id="setTitleHeading" />
+        <span>
+          <strong>Video title as heading</strong>
+          <small>Adds the title as an <code>#</code> heading at the top.</small>
+        </span>
+      </label>
+
+      <label class="opt">
+        <input type="checkbox" id="setProperties" />
+        <span>
+          <strong>Add properties</strong>
+          <small>Include an Obsidian YAML frontmatter block.</small>
+        </span>
+      </label>
+
+      <div id="propsOptions" class="props-options hidden">
+        <p class="props-hint">
+          Drag <span class="grip" aria-hidden="true">⠿</span> to reorder, or
+          focus it and press <code>Alt</code>+<code>↑</code>/<code>↓</code>.
+        </p>
+        <div id="propsList"></div>
+        <button id="addPropBtn" class="btn-add" type="button">
+          + Add property
+        </button>
+      </div>
+
+      <h3 class="preview-title">Preview</h3>
+      <pre id="preview" class="preview"></pre>
+    </main>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
