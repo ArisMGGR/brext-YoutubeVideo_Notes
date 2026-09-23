@@ -35,3 +35,4 @@ desktop.ini
 # Local audit working notes (not part of the extension)
 tests/FINDINGS.md
 tests/VERIFY.md
+tests/LOG.md
