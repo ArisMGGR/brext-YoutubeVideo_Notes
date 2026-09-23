@@ -1,0 +1,11 @@
+# Normalize all text files to LF in the repository and in the working tree,
+# regardless of each contributor's core.autocrlf setting. Prettier's
+# `endOfLine: "lf"` (see .prettierrc) checks line endings, so a CRLF working
+# tree makes `prettier --check .` fail locally on Windows even when the
+# committed content is correct.
+* text=auto eol=lf
+
+# Binary assets: never touch, never diff as text.
+*.png binary
+*.crx binary
+*.zip binary

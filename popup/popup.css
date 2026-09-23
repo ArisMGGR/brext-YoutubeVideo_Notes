@@ -1,0 +1,581 @@
+:root {
+  --bg: #14151a;
+  --bg-elev: #1d1f27;
+  --bg-elev-2: #262933;
+  --border: #33363f;
+  --text: #f2f3f5;
+  --text-dim: #9aa0ab;
+  --accent: #ff1450; /* Opera GX flavored red/pink */
+  --accent-dim: #c40f3d;
+  --save: #2ecc71;
+  --save-dim: #27ae60;
+  --danger: #ff4d4f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 360px;
+  max-height: 560px;
+  overflow-y: auto;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  font-size: 14px;
+}
+
+.app-header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 2;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+}
+
+#reloadBtn,
+#gearBtn,
+#backBtn {
+  font-size: 16px;
+}
+
+#reloadBtn {
+  line-height: 1;
+}
+
+/* Spin the reload icon while it re-fetches the video. */
+#reloadBtn.spinning {
+  animation: reload-spin 0.4s linear;
+}
+
+@keyframes reload-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.video-title {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+main {
+  padding: 14px 16px;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  transition:
+    background 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+}
+.btn-primary:not(:disabled):hover {
+  background: var(--accent-dim);
+}
+
+.btn-save {
+  background: var(--save);
+  margin-top: 8px;
+}
+.btn-save:not(:disabled):hover {
+  background: var(--save-dim);
+}
+
+.btn-secondary {
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+}
+.btn-secondary:not(:disabled):hover {
+  background: #30333d;
+}
+
+.btn-danger {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+.btn-danger:not(:disabled):hover {
+  background: rgba(255, 77, 79, 0.12);
+}
+
+/* Armed state for "Delete all": orange, filled, awaiting a confirming press. */
+.btn-confirm {
+  background: #ff8c00 !important;
+  border-color: #ff8c00 !important;
+  color: #fff !important;
+  letter-spacing: 0.5px;
+}
+.btn-confirm:not(:disabled):hover {
+  background: #e67e00 !important;
+}
+
+.draft {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.draft-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--bg-elev-2);
+  color: var(--accent);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.icon-btn:hover {
+  color: var(--text);
+  background: var(--bg-elev-2);
+}
+
+.note-input {
+  width: 100%;
+  resize: vertical;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  font-family: inherit;
+  font-size: 13px;
+}
+.note-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.saved {
+  margin-top: 18px;
+}
+
+.saved-head h2 {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.count {
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 11px;
+}
+
+.notes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.note-item {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.note-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.note-ts {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.note-ts:hover {
+  text-decoration: underline;
+}
+
+.note-body {
+  font-size: 13px;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.empty {
+  color: var(--text-dim);
+  font-size: 12px;
+  text-align: center;
+  padding: 14px 0;
+  margin: 0;
+}
+
+.app-footer {
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: sticky;
+  bottom: 0;
+  background: var(--bg);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+/* ---------- settings view ---------- */
+
+#settingsView {
+  padding: 14px 16px 20px;
+}
+
+.settings-title {
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+.opt {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.opt input[type="checkbox"] {
+  margin-top: 2px;
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.opt span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.opt strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.opt small {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+
+code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  background: var(--bg-elev-2);
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.props-options {
+  margin: -2px 0 10px 12px;
+  padding: 10px 12px;
+  border-left: 2px solid var(--accent);
+  background: var(--bg-elev);
+  border-radius: 0 10px 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#propsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.props-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.props-hint .grip,
+.grip {
+  color: var(--accent);
+}
+
+/* one property = a small card that can be dragged to reorder */
+.prop-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.prop-item.dragging {
+  opacity: 0.45;
+}
+.prop-item.drop-before {
+  box-shadow: inset 0 2px 0 0 var(--accent);
+}
+.prop-item.drop-after {
+  box-shadow: inset 0 -2px 0 0 var(--accent);
+}
+
+/* A property whose frontmatter key an earlier row already claimed. The export
+   drops it, so flag it rather than dropping it silently. */
+.prop-item.prop-dupe,
+.prop-item.prop-dupe .prop-name {
+  border-color: #ff8c00;
+}
+
+.prop-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drag-handle {
+  flex: 0 0 auto;
+  cursor: grab;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+  padding: 0 2px;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+.drag-handle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+  color: var(--text);
+}
+
+.prop-item input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.prop-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: inherit;
+}
+.prop-name:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.prop-type {
+  flex: 0 0 auto;
+  font-size: 10px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* channel wiki-link sub-row, indented under the name field */
+.prop-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 32px;
+  font-size: 11px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.prop-sub input[type="checkbox"] {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.prop-type-select {
+  flex: 0 0 auto;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 6px;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.prop-type-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.prop-value {
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: inherit;
+}
+.prop-value:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* value field indented under the name field */
+.prop-inset {
+  margin-left: 32px;
+  width: calc(100% - 32px);
+}
+
+.btn-add {
+  align-self: flex-start;
+  background: transparent;
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-add:hover {
+  background: rgba(255, 20, 80, 0.1);
+}
+
+.preview-title {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 16px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.preview {
+  margin: 0;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+.hidden {
+  display: none !important;
+}
