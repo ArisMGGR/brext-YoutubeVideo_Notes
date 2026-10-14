@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTube Timestamp Notes",
-  "version": "1.3.9",
+  "version": "1.3.15",
   "description": "Capture the exact timestamp of a YouTube video, attach a note, and export all notes for a video as Markdown.",
   "author": "ArisMGGR",
   "homepage_url": "https://github.com/ArisMGGR/brext-YoutubeVideo_Notes",

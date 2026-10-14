@@ -467,10 +467,6 @@ function isYouTubeTab(tab) {
 // listener. Resolves true if the script is now present.
 function injectContentScript(tabId) {
   return new Promise((resolve) => {
-    if (!chrome.scripting || !chrome.scripting.executeScript) {
-      resolve(false);
-      return;
-    }
     chrome.scripting.executeScript(
       { target: { tabId }, files: ["content/content.js"] },
       () => resolve(!chrome.runtime.lastError)
@@ -505,6 +501,13 @@ const YAML_RADIX = /^[+-]?0[xXoObB][0-9a-fA-F_]+$/;
 // Infinity and NaN, which YAML spells with a leading dot: `.inf` is read as
 // Infinity and `.nan` as NaN. Matched in any case, like YAML_RESERVED.
 const YAML_SPECIAL_FLOAT = /^[+-]?\.(?:inf|nan)$/i;
+// Characters YAML does not allow anywhere in a document, quoted or not: C0
+// controls other than tab / LF / CR, DEL, the C1 block except NEL, and the
+// noncharacters U+FFFE / U+FFFF. One of them makes a parser reject the whole
+// frontmatter, so yamlScalar() writes them as escapes instead.
+const YAML_NON_PRINTABLE =
+  /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x84\x86-\x9F\uFFFE\uFFFF]/;
+const YAML_NON_PRINTABLE_ALL = new RegExp(YAML_NON_PRINTABLE.source, "g");
 
 function yamlNeedsQuotes(s) {
   return (
@@ -515,6 +518,7 @@ function yamlNeedsQuotes(s) {
     s.endsWith(":") ||
     s.includes(" #") ||
     /[\n\r\t]/.test(s) ||
+    YAML_NON_PRINTABLE.test(s) ||
     YAML_RESERVED.test(s) ||
     YAML_NUMBER.test(s) ||
     YAML_RADIX.test(s) ||
@@ -533,7 +537,13 @@ function yamlScalar(value) {
     .replace(/"/g, '\\"')
     .replace(/\r/g, "\\r")
     .replace(/\n/g, "\\n")
-    .replace(/\t/g, "\\t");
+    .replace(/\t/g, "\\t")
+    .replace(YAML_NON_PRINTABLE_ALL, (c) => {
+      const code = c.charCodeAt(0);
+      return code <= 0xff
+        ? `\\x${code.toString(16).padStart(2, "0")}`
+        : `\\u${code.toString(16)}`;
+    });
   return `"${escaped}"`;
 }
 
@@ -564,6 +574,7 @@ function yamlKey(name) {
     s.endsWith(":") ||
     s.includes(" #") ||
     /[\n\r\t]/.test(s) ||
+    YAML_NON_PRINTABLE.test(s) ||
     YAML_RESERVED.test(s) ||
     yamlRenumbersKey(s);
   return risky ? yamlScalar(s) : s;
@@ -599,6 +610,18 @@ function wikiLinkTarget(name) {
     .replace(/\s+/g, " ")
     .trim();
   return target || null;
+}
+
+// The plain-text title is still a Markdown line of its own, so a title that
+// opens like a block -- "1. Introduction", "- Live -", "> Quote", "## Part 2"
+// -- would render as a list, quote or heading. A backslash before the marker
+// keeps it literal text; CommonMark and Obsidian both honour the escape.
+function plainTitleLine(title) {
+  const ordered = title.match(/^(\d{1,9})([.)])(?=\s|$)/);
+  if (ordered) {
+    return `${ordered[1]}\\${ordered[2]}${title.slice(ordered[0].length)}`;
+  }
+  return /^[#>+\-*_~`<]/.test(title) ? `\\${title}` : title;
 }
 
 // ---------- rendering ----------
@@ -659,7 +682,10 @@ function buildMarkdown(record) {
   }
 
   // Title, as a heading or plain text.
-  lines.push(settings.titleAsHeading ? `# ${title}` : title, "");
+  lines.push(
+    settings.titleAsHeading ? `# ${title}` : plainTitleLine(title),
+    ""
+  );
 
   // Plain video URL line — skip it when the Link property already carries it.
   if (!linkInFrontmatter) {
@@ -814,10 +840,8 @@ async function openDraft() {
   // not the value cached when the popup first opened.
   const previousVideoId = boundVideoId;
   const tab = await queryActiveTab();
-  if (tab && tab.id) {
-    const fresh = await getStateFromTab(tab);
-    if (fresh) state = fresh;
-  }
+  const fresh = tab && tab.id ? await getStateFromTab(tab) : null;
+  if (fresh) state = fresh;
   // That re-read may have landed on a different video than the panel is bound
   // to; rebind before touching the draft.
   await syncDraftToCurrentVideo();
@@ -844,6 +868,12 @@ async function openDraft() {
   if (existing) {
     draftSeconds = existing.seconds;
     els.noteInput.value = existing.note || "";
+  } else if (!fresh) {
+    // The re-read failed, so `state` is still the one from when the popup
+    // opened. Its currentTime is the stale value the rule above forbids, and
+    // its adPlaying flag is just as old: say so instead of using either.
+    showToast("Could not read the playback time — try again");
+    return;
   } else if (state.adPlaying) {
     // The content script withholds the time during an ad: the only one it has
     // is the ad's, and filing that under the video would be silently wrong.
@@ -1020,6 +1050,8 @@ async function seekTo(seconds) {
     showToast("Video changed — press ⟳ to see its notes");
   } else if (resp && resp.reason === "ad-playing") {
     showToast("An ad is playing — try again once the video is back");
+  } else if (resp && resp.reason === "video-loading") {
+    showToast("The video is still loading — try again in a moment");
   }
 }
 
@@ -1115,8 +1147,10 @@ async function clearAll() {
 
 function showView(name) {
   const onSettings = name === "settings";
-  els.settingsView.classList.toggle("hidden", !onSettings);
-  els.mainView.classList.toggle("hidden", onSettings);
+  // The two views are both <main>, and HTML allows only one <main> without the
+  // hidden attribute, so these two are hidden by the attribute, not the class.
+  els.settingsView.hidden = !onSettings;
+  els.mainView.hidden = onSettings;
   els.mainFooter.classList.toggle("hidden", onSettings);
   els.reloadBtn.classList.toggle("hidden", onSettings);
   els.gearBtn.classList.toggle("hidden", onSettings);
@@ -1254,6 +1288,10 @@ function buildPropRow(item) {
     dragId = null; // a drag cancelled outside the list ends here, not in onRowDrop
   });
   card.addEventListener("dragstart", (e) => {
+    // A text selection dragged out of one of the row's inputs fires dragstart
+    // on that input and bubbles here. Taking it as a row drag would reorder
+    // the properties on drop and swallow the text, so leave it to the browser.
+    if (e.target !== card) return;
     dragId = item.id;
     card.classList.add("dragging");
     e.dataTransfer.effectAllowed = "move";
@@ -1434,10 +1472,12 @@ function onRowDragOver(e, card) {
 }
 
 function onRowDrop(e, targetId) {
+  // Not a row drag (text dropped into an input): let the browser insert it.
+  if (dragId === null) return;
   e.preventDefault();
   clearDropMarkers();
   const items = settings.properties.items;
-  if (dragId === null || dragId === targetId) {
+  if (dragId === targetId) {
     dragId = null;
     return;
   }
@@ -1450,7 +1490,6 @@ function onRowDrop(e, targetId) {
   const after = e.clientY > rect.top + rect.height / 2;
   const [moved] = items.splice(from, 1);
   let insertAt = items.findIndex((i) => i.id === targetId);
-  if (insertAt < 0) insertAt = items.length - 1;
   if (after) insertAt += 1;
   items.splice(insertAt, 0, moved);
   dragId = null;

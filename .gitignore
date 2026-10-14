@@ -2,30 +2,32 @@
 # .gitignore as well as .prettierignore, so this is the single ignore list
 # for both git and `prettier --check .`. There is no separate .prettierignore.
 
-# Secrets — never commit these
+# Secrets — never commit these (*.pem includes the key Chrome generates
+# when packing an extension into a .crx)
 .env
 .env.*
+!.env.example
 *.pem
 *.key
 *.p12
 secrets.json
 
-# Packaged builds
+# Packaged builds (Chrome Web Store upload zip, packed extension)
 *.zip
 *.crx
-*.xpi
 
-# Node (only if tooling is ever added; the extension itself has no deps).
-# Lockfiles are deliberately NOT ignored -- they belong in version control.
-node_modules/
-npm-debug.log*
-yarn-error.log*
+# Logs
+*.log
 
 # Editors
 .vscode/
 .idea/
 *.swp
 *~
+
+# Claude Code per-user local files (shared .claude/settings.json is fine)
+.claude/settings.local.json
+CLAUDE.local.md
 
 # OS cruft
 .DS_Store

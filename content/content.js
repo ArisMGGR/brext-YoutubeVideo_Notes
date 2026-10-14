@@ -79,6 +79,16 @@ function getVideoId() {
     // says this is not a video page instead of quietly mixing the notes.
     const embedMatch = url.pathname.match(/^\/embed\/([^/]+)/);
     if (embedMatch && embedMatch[1] !== "videoseries") return embedMatch[1];
+    // Clips: youtube.com/clip/<clipId>. The address names the clip, not a
+    // video, and keeps that form while an ordinary watch page plays a stretch
+    // of the source video. currentTime there is the source video's own, so the
+    // notes and their &t= links belong under the source video's id, which the
+    // shown watch page carries.
+    if (/^\/clip\//.test(url.pathname)) {
+      const watch = queryShown("ytd-watch-flexy[video-id]");
+      const clipVideoId = watch && watch.getAttribute("video-id");
+      if (clipVideoId) return clipVideoId;
+    }
   } catch (e) {
     /* ignore */
   }
@@ -96,20 +106,11 @@ function getVideoTitle() {
   if (el && el.textContent && el.textContent.trim()) {
     return el.textContent.trim();
   }
-  // The document title carries YouTube's unread-notification count as a
-  // "(3) " prefix, which would otherwise end up in the exported note title.
-  const fromDocument = document.title
-    .replace(/^\(\d+\)\s*/, "")
-    .replace(/\s*-\s*YouTube\s*$/, "")
-    .trim();
-  // On /embed/<id> the document title is the bare word "YouTube": the suffix
-  // strip above needs a preceding "-", so it survives and would be exported as
-  // the note's heading. Reject it and read the player's own title bar, which is
-  // the only place the embed page names the video.
-  if (fromDocument && fromDocument !== "YouTube") return fromDocument;
-  // That title bar follows whatever the player is showing, including a pre-roll
-  // ad -- on a watch page it reads the ad's title with an empty href. Accept it
-  // only while its link still points at the video we identified.
+  // Next, the player's own title bar: on Shorts it is the only element that
+  // names the video, and on /embed/<id> the only place at all. It follows
+  // whatever the player is showing, including a pre-roll ad -- on a watch page
+  // it reads the ad's title with an empty href. Accept it only while its link
+  // still points at the video we identified.
   const videoId = getVideoId();
   const playerTitle = queryShown("a.ytp-title-link");
   if (
@@ -120,9 +121,19 @@ function getVideoTitle() {
   ) {
     return playerTitle.textContent.trim();
   }
-  // Better no title than a placeholder: every caller already falls back on the
-  // video id or "YouTube video".
-  return "";
+  // Last, the document title. It carries YouTube's unread-notification count
+  // as a "(3) " prefix, which would otherwise end up in the exported note
+  // title. The strip cannot tell that prefix from a title that itself opens
+  // with "(2024)", which is why the title bar above is asked first.
+  const fromDocument = document.title
+    .replace(/^\(\d+\)\s*/, "")
+    .replace(/\s*-\s*YouTube\s*$/, "")
+    .trim();
+  // On /embed/<id> the document title is the bare word "YouTube": the suffix
+  // strip above needs a preceding "-", so it survives and would be exported as
+  // the note's heading. Better no title than a placeholder: every caller
+  // already falls back on the video id or "YouTube video".
+  return fromDocument !== "YouTube" ? fromDocument : "";
 }
 
 // Selectors are tried in order and the first one yielding non-empty text wins.
@@ -145,7 +156,14 @@ function getChannel() {
     "ytd-video-owner-renderer ytd-channel-name a",
     "#owner #channel-name a",
     "ytd-channel-name#channel-name a",
-    ...(microdataCurrent
+    // Never on Shorts. A Short loaded directly carries current microdata too,
+    // but it names the display name, while the reel below gives the @handle --
+    // and the reel's channel bar is still empty for about two seconds after
+    // such a load. Offering the microdata there would file one channel as
+    // "Name" or "@handle" depending on how the Short was reached or how soon
+    // the popup opened. An empty answer is filled in by a later save or by
+    // the export instead.
+    ...(microdataCurrent && !isShortsPage()
       ? ['span[itemprop="author"] link[itemprop="name"]']
       : []),
     // Shorts names the owner by @handle in the channel bar of the reel that
@@ -169,6 +187,17 @@ function getChannel() {
   return "";
 }
 
+// After an in-page move from one watch video to another, the address names the
+// new video at once, but the shown watch page keeps the previous video's h1,
+// owner and document title for a couple of seconds while it re-renders (about
+// 2.4 s live). ytd-watch-flexy's video-id attribute moves with that content,
+// not with the address, so while it names another video everything read off
+// the page belongs to that video. Shorts and embeds have no shown flexy.
+function isWatchPageBehind(videoId) {
+  const watch = queryShown("ytd-watch-flexy[video-id]");
+  return !!watch && watch.getAttribute("video-id") !== videoId;
+}
+
 function getState() {
   const video = getVideoElement();
   const videoId = getVideoId();
@@ -181,13 +210,19 @@ function getState() {
   // The page is still this video during an ad, so the popup keeps working; only
   // the playback time is withheld, since the one available belongs to the ad.
   const adPlaying = isAdShowing(video);
+  // An empty title and channel are the lesser wrong while the page lags: a save
+  // keeps a record's existing values over "", and the export fills empty ones
+  // from the page once it has caught up. The player lags with them -- it still
+  // holds the previous video's position -- so the time is withheld too, the
+  // same way it is during an ad.
+  const behind = isWatchPageBehind(videoId);
   return {
     ok: true,
     videoId,
-    currentTime: adPlaying ? null : video.currentTime,
+    currentTime: adPlaying || behind ? null : video.currentTime,
     adPlaying,
-    title: getVideoTitle(),
-    channel: getChannel(),
+    title: behind ? "" : getVideoTitle(),
+    channel: behind ? "" : getChannel(),
     url: `https://www.youtube.com/watch?v=${videoId}`,
   };
 }
@@ -196,8 +231,15 @@ function getState() {
 // moved on since (autoplay, in-page navigation) while the popup stayed open;
 // seeking then would jump a different video to a moment in the listed one.
 function seekTo(seconds, videoId) {
-  if (videoId && videoId !== getVideoId()) {
+  const currentId = getVideoId();
+  if (videoId && videoId !== currentId) {
     return { ok: false, reason: "video-changed" };
+  }
+  // Right after an in-page move the player can still hold the previous video,
+  // which is why getState() withholds the time then. Seeking now would move
+  // that video, or be lost when the new one loads.
+  if (currentId && isWatchPageBehind(currentId)) {
+    return { ok: false, reason: "video-loading" };
   }
   const video = getVideoElement();
   if (!video) return { ok: false };
