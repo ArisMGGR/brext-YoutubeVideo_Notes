@@ -398,7 +398,6 @@ code {
   font-size: 11px;
   color: var(--text-dim);
 }
-.props-hint .grip,
 .grip {
   color: var(--accent);
 }

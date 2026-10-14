@@ -7,7 +7,7 @@ many timestamped notes per video as you like, and export them all as Markdown.
 ## Features
 
 - **Capture the current timestamp** with one click, formatted as `[MM:SS]` (or
-  `[HH:MM:SS]` for videos an hour or longer).
+  `[HH:MM:SS]` once the timestamp itself is an hour or more).
 - **Attach a note** to each captured timestamp.
 - **Save multiple notes per video.** Notes are stored locally per video ID and
   persist across browser restarts.
@@ -152,8 +152,13 @@ the folder you load.
 ## Notes & limitations
 
 - Works on watch pages (`youtube.com/watch?v=...`), live streams and their
-  replays (`/live/<id>`), Shorts (`/shorts/<id>`) and embed pages opened
-  directly (`/embed/<id>`), on `www.youtube.com`.
+  replays (`/live/<id>`), Shorts (`/shorts/<id>`), clips (`/clip/<id>`) and
+  embed pages (`/embed/<id>`) whose player plays, on `www.youtube.com`. A clip's
+  notes are filed under the video it was cut from, with timestamps in that
+  video's time, so they sit alongside notes taken on the full video.
+- **An embed page typed into the address bar may not play.** YouTube can
+  refuse it with "Video player configuration error", and with nothing playing
+  there is no timestamp to capture — open the video's watch page instead.
 - **Playlist embeds (`/embed/videoseries?list=...`) are not supported.** That URL
   names a playlist, not a video, so there is no video id to file notes under —
   the popup reports it as not a video page rather than mixing every playlist's
